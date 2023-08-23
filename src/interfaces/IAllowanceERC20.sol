@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-interface IAllowanceGovernor {
+interface IAllowanceERC20 {
     event AllowanceSet(
         address indexed owner,
         address indexed delegate,
@@ -28,6 +28,14 @@ interface IAllowanceGovernor {
         address indexed owner,
         address indexed delegate,
         address indexed token
+    );
+
+    event AllowanceSpentUpdated(
+        address indexed owner,
+        address indexed delegate,
+        address indexed token,
+        uint96 amount,
+        uint96 remaining
     );
 
     function setAllowance(

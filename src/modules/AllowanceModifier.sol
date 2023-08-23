@@ -68,14 +68,6 @@ library AllowanceModifier {
         );
     }
 
-    function removeAllowanceDelegate(
-        mapping(bytes32 => Allowance) storage _allowances,
-        address _token,
-        address _delegate
-    ) internal onlyValidDelegate(_delegate) onlyValidToken(_token) {
-        _removeAllowanceDelegate(_allowances, msg.sender, _delegate, _token);
-    }
-
     function updateAllowanceExpiration(
         mapping(bytes32 => Allowance) storage _allowances,
         address _delegate,
@@ -89,6 +81,22 @@ library AllowanceModifier {
             _token,
             _expiration
         );
+    }
+
+    function resetAllowanceSpent(
+        mapping(bytes32 => Allowance) storage _allowances,
+        address _delegate,
+        address _token
+    ) internal onlyValidDelegate(_delegate) onlyValidToken(_token) {
+        _resetAllowanceSpent(_allowances, msg.sender, _delegate, _token, 0);
+    }
+
+    function removeAllowanceDelegate(
+        mapping(bytes32 => Allowance) storage _allowances,
+        address _token,
+        address _delegate
+    ) internal onlyValidDelegate(_delegate) onlyValidToken(_token) {
+        _removeAllowanceDelegate(_allowances, msg.sender, _delegate, _token);
     }
 
     function _setAllowance(
@@ -133,6 +141,18 @@ library AllowanceModifier {
         bytes32 _allowanceKey = getAllowanceKey(_owner, _delegate, _token);
 
         _allowances[_allowanceKey].expiration = _expiration;
+    }
+
+    function _resetAllowanceSpent(
+        mapping(bytes32 => Allowance) storage _allowances,
+        address _owner,
+        address _delegate,
+        address _token,
+        uint96 _spent
+    ) internal {
+        bytes32 _allowanceKey = getAllowanceKey(_owner, _delegate, _token);
+
+        _allowances[_allowanceKey].spent = _spent;
     }
 
     function _removeAllowanceDelegate(

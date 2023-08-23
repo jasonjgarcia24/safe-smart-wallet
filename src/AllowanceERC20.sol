@@ -3,17 +3,13 @@ pragma solidity 0.8.20;
 
 import {DOMAIN_SEPARATOR_TYPEHASH, ALLOWANCE_TRANSFER_TYPEHASH} from "./modules/AllowanceSignerModule.sol";
 
-import {IAllowanceGovernor} from "./interfaces/IAllowanceGovernor.sol";
+import {IAllowanceERC20} from "./interfaces/IAllowanceERC20.sol";
 import {AllowanceMeta} from "./modules/AllowanceMeta.sol";
 import {AllowanceDatabase} from "./modules/AllowanceDatabase.sol";
 import {IOperations, IGnosisSafe} from "./interfaces/IGnosisSafe.sol";
 import {AllowanceModifier, Allowance} from "./modules/AllowanceModifier.sol";
 
-contract AllowanceGovernor is
-    IAllowanceGovernor,
-    AllowanceMeta,
-    AllowanceDatabase
-{
+contract AllowanceERC20 is IAllowanceERC20, AllowanceMeta, AllowanceDatabase {
     using AllowanceModifier for mapping(bytes32 => Allowance);
 
     constructor(
@@ -57,6 +53,24 @@ contract AllowanceGovernor is
         );
     }
 
+    function resetAllowanceSpent(address _delegate, address _token) external {
+        _allowances.resetAllowanceSpent(_delegate, _token);
+
+        bytes32 _allowanceKey = AllowanceModifier.getAllowanceKey(
+            msg.sender,
+            _delegate,
+            _token
+        );
+
+        emit AllowanceSpentUpdated(
+            msg.sender,
+            _delegate,
+            _token,
+            0,
+            _getAllowanceBalance(_allowances[_allowanceKey])
+        );
+    }
+
     function removeAllowanceDelegate(
         address _delegate,
         address _token
@@ -64,6 +78,22 @@ contract AllowanceGovernor is
         _allowances.removeAllowanceDelegate(_delegate, _token);
 
         emit AllowanceDelegateRemoved(msg.sender, _delegate, _token);
+    }
+
+    function spendAllowance(
+        address _owner,
+        address _token,
+        uint96 _amount
+    ) external override onlyDelegate(_owner, msg.sender, _token) {
+        uint96 _remaining = _spendAllowance(_owner, _token, _amount);
+
+        emit AllowanceSpentUpdated(
+            _owner,
+            msg.sender,
+            _token,
+            _amount,
+            _remaining
+        );
     }
 
     function getAllowance(
