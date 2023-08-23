@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import {DOMAIN_SEPARATOR_TYPEHASH, ALLOWANCE_TRANSFER_TYPEHASH} from "./utils/AllowanceNotary.sol";
-
 import {IDelegatedTransferModule} from "./interfaces/IDelegatedTransferModule.sol";
 import {AllowanceERC20} from "./AllowanceERC20.sol";
 import {IOperations, IGnosisSafe} from "./interfaces/IGnosisSafe.sol";
-import {AllowanceModifier, Allowance} from "./utils/AllowanceModifier.sol";
+import {Allowance} from "./utils/AllowanceModifier.sol";
 import {AllowanceNotary, TransferMsgData} from "./utils/AllowanceNotary.sol";
 import {InvalidDelegate} from "./utils/AllowanceDatabase.sol";
 
