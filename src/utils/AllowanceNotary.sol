@@ -19,9 +19,9 @@ struct TransferMsgData {
 bytes32 constant DOMAIN_SEPARATOR_TYPEHASH = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
 
 // keccak256(
-//     "AllowanceTransfer(address safe,address token,address to,uint96 amount,address paymentToken,uint96 payment,uint192 nonce)"
+//     "TransferMsgData(address safe,address token,address to,uint96 amount,address paymentToken,uint96 payment,uint192 nonce)"
 // );
-bytes32 constant ALLOWANCE_TRANSFER_TYPEHASH = 0xfd2d14bb7eac18a8320c374fc2fe8d30d437ab29df02b8cfdd34ff8218fc8cc1;
+bytes32 constant TRANSFER_MSG_DATA_TYPEHASH = 0x0f4999bdd02a26c4ee10acb698cde0de6ee4ba57266b69f4fbb84d8cde62c15c;
 
 error InvalidSigner();
 error InvalidSignatureLength();
@@ -81,7 +81,7 @@ abstract contract AllowanceNotary {
         return
             keccak256(
                 abi.encode(
-                    ALLOWANCE_TRANSFER_TYPEHASH,
+                    TRANSFER_MSG_DATA_TYPEHASH,
                     _msgData.safe,
                     _msgData.token,
                     _msgData.to,
