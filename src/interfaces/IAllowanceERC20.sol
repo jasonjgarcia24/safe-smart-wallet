@@ -3,35 +3,37 @@ pragma solidity 0.8.20;
 
 interface IAllowanceERC20 {
     event AllowanceSet(
-        address indexed owner,
+        address indexed safe,
         address indexed delegate,
         address indexed token,
+        uint96 amount,
         uint64 expiration,
-        uint96 amount
+        uint32 resetPeriod
     );
 
     event AllowanceAmountUpdated(
-        address indexed owner,
+        address indexed safe,
         address indexed delegate,
         address indexed token,
         uint96 amount
     );
 
     event AllowanceExpirationUpdated(
-        address indexed owner,
+        address indexed safe,
         address indexed delegate,
         address indexed token,
-        uint64 expiration
+        uint64 expiration,
+        uint32 resetPeriod
     );
 
     event AllowanceDelegateRemoved(
-        address indexed owner,
+        address indexed safe,
         address indexed delegate,
         address indexed token
     );
 
     event AllowanceSpentUpdated(
-        address indexed owner,
+        address indexed safe,
         address indexed delegate,
         address indexed token,
         uint96 amount,
@@ -41,8 +43,9 @@ interface IAllowanceERC20 {
     function setAllowance(
         address _delegate,
         address _token,
+        uint96 _amount,
         uint64 _expiration,
-        uint96 _amount
+        uint32 _resetPeriod
     ) external;
 
     function updateAllowanceAmount(
@@ -54,7 +57,8 @@ interface IAllowanceERC20 {
     function updateAllowanceExpiration(
         address _delegate,
         address _token,
-        uint64 _expiration
+        uint64 _expiration,
+        uint32 _resetPeriod
     ) external;
 
     function removeAllowanceDelegate(

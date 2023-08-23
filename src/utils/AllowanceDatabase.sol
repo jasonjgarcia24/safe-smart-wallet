@@ -1,28 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import {AllowanceModifier, Allowance, InvalidAllowanceParam} from "./AllowanceModifier.sol";
+import {AllowanceModifier, Allowance} from "./AllowanceModifier.sol";
 
-error InsufficientAllowance();
+error InvalidDelegate();
+error InsufficientAllowance(address token);
 
 abstract contract AllowanceDatabase {
-    // allowanceKey = keccak256(abi.encode(owner, delegate, token))
+    // allowanceKey = keccak256(abi.encode(safe, delegate, token))
     mapping(bytes32 allowanceKey => Allowance) internal _allowances;
 
     modifier onlyDelegate(
-        address _owner,
+        address _safe,
         address _delegate,
         address _token
     ) {
-        __verifyDelegate(_owner, _delegate, _token);
+        __verifyDelegate(_safe, _delegate, _token);
         _;
     }
-
-    function spendAllowance(
-        address _owner,
-        address _token,
-        uint96 _amount
-    ) external virtual;
 
     function checkDelegate(bytes32 _allowanceKey) public view returns (bool) {
         return _allowances[_allowanceKey].delegate == msg.sender;
@@ -35,12 +30,12 @@ abstract contract AllowanceDatabase {
     }
 
     function _spendAllowance(
-        address _owner,
+        address _safe,
         address _token,
         uint96 _amount
-    ) internal returns (uint96 _remaining) {
+    ) internal virtual returns (uint96 _remaining) {
         bytes32 _allowanceKey = AllowanceModifier.getAllowanceKey(
-            _owner,
+            _safe,
             msg.sender,
             _token
         );
@@ -49,22 +44,22 @@ abstract contract AllowanceDatabase {
         _allowance.spent += _amount;
 
         if (_allowance.spent > _allowance.amount)
-            revert InsufficientAllowance();
+            revert InsufficientAllowance(_token);
 
         return _getAllowanceBalance(_allowance);
     }
 
     function __verifyDelegate(
-        address _owner,
+        address _safe,
         address _delegate,
         address _token
     ) private view {
         bytes32 _allowanceKey = AllowanceModifier.getAllowanceKey(
-            _owner,
+            _safe,
             _delegate,
             _token
         );
 
-        if (!checkDelegate(_allowanceKey)) revert InvalidAllowanceParam(2);
+        if (!checkDelegate(_allowanceKey)) revert InvalidDelegate();
     }
 }

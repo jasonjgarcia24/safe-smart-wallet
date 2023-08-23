@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import {DOMAIN_SEPARATOR_TYPEHASH, ALLOWANCE_TRANSFER_TYPEHASH} from "./modules/AllowanceSignerModule.sol";
-
 import {IAllowanceERC20} from "./interfaces/IAllowanceERC20.sol";
-import {AllowanceMeta} from "./modules/AllowanceMeta.sol";
-import {AllowanceDatabase} from "./modules/AllowanceDatabase.sol";
-import {IOperations, IGnosisSafe} from "./interfaces/IGnosisSafe.sol";
-import {AllowanceModifier, Allowance} from "./modules/AllowanceModifier.sol";
+import {AllowanceMeta} from "./utils/AllowanceMeta.sol";
+import {AllowanceDatabase} from "./utils/AllowanceDatabase.sol";
+import {AllowanceModifier, Allowance} from "./utils/AllowanceModifier.sol";
+
+error InvalidTokenAmount(uint256 amount);
 
 contract AllowanceERC20 is IAllowanceERC20, AllowanceMeta, AllowanceDatabase {
     using AllowanceModifier for mapping(bytes32 => Allowance);
@@ -20,12 +19,26 @@ contract AllowanceERC20 is IAllowanceERC20, AllowanceMeta, AllowanceDatabase {
     function setAllowance(
         address _delegate,
         address _token,
+        uint96 _amount,
         uint64 _expiration,
-        uint96 _amount
+        uint32 _resetPeriod
     ) external {
-        _allowances.setAllowance(_delegate, _token, _expiration, _amount);
+        _allowances.setAllowance(
+            _delegate,
+            _token,
+            _amount,
+            _expiration,
+            _resetPeriod
+        );
 
-        emit AllowanceSet(msg.sender, _delegate, _token, _expiration, _amount);
+        emit AllowanceSet(
+            msg.sender,
+            _delegate,
+            _token,
+            _amount,
+            _expiration,
+            _resetPeriod
+        );
     }
 
     function updateAllowanceAmount(
@@ -41,15 +54,22 @@ contract AllowanceERC20 is IAllowanceERC20, AllowanceMeta, AllowanceDatabase {
     function updateAllowanceExpiration(
         address _delegate,
         address _token,
-        uint64 _expiration
+        uint64 _expiration,
+        uint32 _resetPeriod
     ) external {
-        _allowances.updateAllowanceExpiration(_delegate, _token, _expiration);
+        _allowances.updateAllowanceExpiration(
+            _delegate,
+            _token,
+            _expiration,
+            _resetPeriod
+        );
 
         emit AllowanceExpirationUpdated(
             msg.sender,
             _delegate,
             _token,
-            _expiration
+            _expiration,
+            _resetPeriod
         );
     }
 
@@ -80,25 +100,36 @@ contract AllowanceERC20 is IAllowanceERC20, AllowanceMeta, AllowanceDatabase {
         emit AllowanceDelegateRemoved(msg.sender, _delegate, _token);
     }
 
-    function spendAllowance(
-        address _owner,
+    function getAllowance(
+        bytes32 _allowanceKey
+    ) public view returns (Allowance memory) {
+        return _allowances[_allowanceKey];
+    }
+
+    function _spendAllowance(
+        address _safe,
         address _token,
         uint96 _amount
-    ) external override onlyDelegate(_owner, msg.sender, _token) {
-        uint96 _remaining = _spendAllowance(_owner, _token, _amount);
+    )
+        internal
+        override
+        onlyDelegate(_safe, msg.sender, _token)
+        returns (uint96 _remaining)
+    {
+        if (_amount == 0) revert InvalidTokenAmount(_amount);
+
+        // Validate allowance expiration.
+        _allowances.validateExpiration(_safe, msg.sender, _token);
+
+        // Spend allowance.
+        _remaining = super._spendAllowance(_safe, _token, _amount);
 
         emit AllowanceSpentUpdated(
-            _owner,
+            _safe,
             msg.sender,
             _token,
             _amount,
             _remaining
         );
-    }
-
-    function getAllowance(
-        bytes32 _allowanceKey
-    ) external view returns (Allowance memory) {
-        return _allowances[_allowanceKey];
     }
 }
