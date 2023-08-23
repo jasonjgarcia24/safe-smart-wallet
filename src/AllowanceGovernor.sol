@@ -3,13 +3,17 @@ pragma solidity 0.8.20;
 
 import {DOMAIN_SEPARATOR_TYPEHASH, ALLOWANCE_TRANSFER_TYPEHASH} from "./modules/AllowanceSignerModule.sol";
 
-import {IAllowanceModule} from "./interfaces/IAllowanceModule.sol";
+import {IAllowanceGovernor} from "./interfaces/IAllowanceGovernor.sol";
 import {AllowanceMeta} from "./modules/AllowanceMeta.sol";
 import {AllowanceDatabase} from "./modules/AllowanceDatabase.sol";
 import {IOperations, IGnosisSafe} from "./interfaces/IGnosisSafe.sol";
 import {AllowanceModifier, Allowance} from "./modules/AllowanceModifier.sol";
 
-contract AllowanceModule is IAllowanceModule, AllowanceMeta, AllowanceDatabase {
+contract AllowanceGovernor is
+    IAllowanceGovernor,
+    AllowanceMeta,
+    AllowanceDatabase
+{
     using AllowanceModifier for mapping(bytes32 => Allowance);
 
     constructor(
@@ -24,6 +28,8 @@ contract AllowanceModule is IAllowanceModule, AllowanceMeta, AllowanceDatabase {
         uint96 _amount
     ) external {
         _allowances.setAllowance(_delegate, _token, _expiration, _amount);
+
+        emit AllowanceSet(msg.sender, _delegate, _token, _expiration, _amount);
     }
 
     function updateAllowanceAmount(
@@ -32,6 +38,8 @@ contract AllowanceModule is IAllowanceModule, AllowanceMeta, AllowanceDatabase {
         uint96 _amount
     ) external {
         _allowances.updateAllowanceAmount(_delegate, _token, _amount);
+
+        emit AllowanceAmountUpdated(msg.sender, _delegate, _token, _amount);
     }
 
     function updateAllowanceExpiration(
@@ -40,6 +48,13 @@ contract AllowanceModule is IAllowanceModule, AllowanceMeta, AllowanceDatabase {
         uint64 _expiration
     ) external {
         _allowances.updateAllowanceExpiration(_delegate, _token, _expiration);
+
+        emit AllowanceExpirationUpdated(
+            msg.sender,
+            _delegate,
+            _token,
+            _expiration
+        );
     }
 
     function removeAllowanceDelegate(
@@ -47,6 +62,8 @@ contract AllowanceModule is IAllowanceModule, AllowanceMeta, AllowanceDatabase {
         address _token
     ) external {
         _allowances.removeAllowanceDelegate(_delegate, _token);
+
+        emit AllowanceDelegateRemoved(msg.sender, _delegate, _token);
     }
 
     function getAllowance(

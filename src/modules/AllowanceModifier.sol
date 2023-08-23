@@ -6,10 +6,10 @@ error InvalidAllowanceParam(uint256 param);
 
 struct Allowance {
     address owner;
-    address delegate;
-    address token;
     uint64 expiration;
+    address delegate;
     uint96 amount;
+    address token;
     uint96 spent;
 }
 
@@ -101,14 +101,14 @@ library AllowanceModifier {
     ) internal {
         bytes32 _allowanceKey = getAllowanceKey(_owner, _delegate, _token);
 
-        _allowances[_allowanceKey] = Allowance(
-            _owner,
-            _delegate,
-            _token,
-            _expiration,
-            _amount,
-            0
-        );
+        _allowances[_allowanceKey] = Allowance({
+            owner: _owner,
+            delegate: _delegate,
+            token: _token,
+            amount: _amount,
+            spent: 0,
+            expiration: _expiration
+        });
     }
 
     function _updateAllowanceAmount(
@@ -143,13 +143,13 @@ library AllowanceModifier {
     ) internal {
         bytes32 _allowanceKey = getAllowanceKey(_owner, _delegate, _token);
 
-        _allowances[_allowanceKey] = Allowance(
-            _owner,
-            address(0),
-            _token,
-            0,
-            0,
-            0
-        );
+        _allowances[_allowanceKey] = Allowance({
+            owner: _owner,
+            delegate: address(0),
+            token: _token,
+            amount: 0,
+            spent: 0,
+            expiration: 0
+        });
     }
 }

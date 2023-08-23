@@ -10,10 +10,10 @@ error InvalidAllowanceParam(uint256 param);
 
 struct Allowance {
     address owner;
-    address delegate;
-    address token;
     uint64 expiration;
+    address delegate;
     uint96 amount;
+    address token;
     uint96 spent;
 }
 
@@ -299,7 +299,11 @@ pragma solidity 0.8.20;
 ////import {IOperations, IGnosisSafe} from "./interfaces/IGnosisSafe.sol";
 ////import {AllowanceModifier, Allowance} from "./modules/AllowanceModifier.sol";
 
-contract AllowanceModule is IAllowanceModule, AllowanceMeta, AllowanceDatabase {
+contract AllowanceGovernor is
+    IAllowanceModule,
+    AllowanceMeta,
+    AllowanceDatabase
+{
     using AllowanceModifier for mapping(bytes32 => Allowance);
 
     constructor(
